@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code生成器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #qrcode {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+        #qrcode img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* RWD 調整 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            input, select, textarea, button {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code生成器</h1>
+        <div class="input-group">
+            <label for="qr-type">QR Code類型：</label>
+            <select id="qr-type">
+                <option value="text">文字/URL</option>
+                <option value="email">電子郵件</option>
+                <option value="sms">簡訊</option>
+                <option value="wifi">Wi-Fi</option>
+            </select>
+        </div>
+        <div id="dynamic-inputs"></div>
+        <button onclick="generateQR()">生成QR Code</button>
+        <div id="qrcode"></div>
+    </div>
+
+    <script>
+        const qrTypeSelect = document.getElementById('qr-type');
+        const dynamicInputs = document.getElementById('dynamic-inputs');
+
+        qrTypeSelect.addEventListener('change', updateInputs);
+
+        function updateInputs() {
+            const qrType = qrTypeSelect.value;
+            let inputsHTML = '';
+
+            switch(qrType) {
+                case 'text':
+                    inputsHTML = `<div class="input-group">
+                        <label for="text-input">文字或URL：</label>
+                        <input type="text" id="text-input" placeholder="輸入文字或URL">
+                    </div>`;
+                    break;
+                case 'email':
+                    inputsHTML = `<div class="input-group">
+                        <label for="email-to">收件人：</label>
+                        <input type="email" id="email-to" placeholder="收件人郵箱">
+                    </div>
+                    <div class="input-group">
+                        <label for="email-subject">主題：</label>
+                        <input type="text" id="email-subject" placeholder="郵件主題">
+                    </div>
+                    <div class="input-group">
+                        <label for="email-body">內容：</label>
+                        <textarea id="email-body" placeholder="郵件內容"></textarea>
+                    </div>`;
+                    break;
+                case 'sms':
+                    inputsHTML = `<div class="input-group">
+                        <label for="phone-number">電話號碼：</label>
+                        <input type="tel" id="phone-number" placeholder="接收者電話號碼">
+                    </div>
+                    <div class="input-group">
+                        <label for="sms-message">訊息：</label>
+                        <textarea id="sms-message" placeholder="簡訊內容"></textarea>
+                    </div>`;
+                    break;
+                case 'wifi':
+                    inputsHTML = `<div class="input-group">
+                        <label for="wifi-ssid">網絡名稱（SSID）：</label>
+                        <input type="text" id="wifi-ssid" placeholder="Wi-Fi 網絡名稱">
+                    </div>
+                    <div class="input-group">
+                        <label for="wifi-password">密碼：</label>
+                        <input type="password" id="wifi-password" placeholder="Wi-Fi 密碼">
+                    </div>
+                    <div class="input-group">
+                        <label for="wifi-encryption">加密類型：</label>
+                        <select id="wifi-encryption">
+                            <option value="WPA">WPA/WPA2</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">無密碼</option>
+                        </select>
+                    </div>`;
+                    break;
+            }
+
+            dynamicInputs.innerHTML = inputsHTML;
+        }
+
+        function generateQR() {
+            const qrType = qrTypeSelect.value;
+            let qrData = '';
+
+            switch(qrType) {
+                case 'text':
+                    qrData = document.getElementById('text-input').value;
+                    break;
+                case 'email':
+                    const to = document.getElementById('email-to').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    qrData = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    break;
+                case 'sms':
+                    const phoneNumber = document.getElementById('phone-number').value;
+                    const message = document.getElementById('sms-message').value;
+                    qrData = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+                    break;
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-encryption').value;
+                    qrData = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+                    break;
+            }
+
+            if(qrData) {
+                document.getElementById("qrcode").innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            } else {
+                alert("請填寫所有必要的信息");
+            }
+        }
+
+        // 初始化輸入欄位
+        updateInputs();
+    </script>
+</body>
+</html>
